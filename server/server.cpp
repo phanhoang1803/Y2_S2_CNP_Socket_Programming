@@ -14,6 +14,7 @@
 #include "..\utils.h"
 #include "..\UI.h"
 #include "..\handle.h"
+#include "..\processControl.h"
 
 #include <sstream>
 
@@ -120,7 +121,24 @@ int main(int argc, char *argv[])
             // Control process toggle
             else if (tokens[0] == "2")
             {
-                // Sth
+                // List the running processes
+                std::string runningProcesses = prcCtr::ListProcess();
+                std::cout << runningProcesses.c_str();
+                error = send(acceptfd, runningProcesses.c_str(), runningProcesses.length(), 0);
+                if (error == SOCKET_ERROR)
+                    esc("send", listenfd, acceptfd);
+
+                // Get the ID and terminate the corresponding process
+                DWORD pid;
+                error = recv(acceptfd, (char*)&pid, sizeof(DWORD), 0);
+                if (prcCtr::TerminateProcess_(pid)) {
+                    error = send(acceptfd, "SUCCESS", 10, 0);
+                }
+                else {
+                    error = send(acceptfd, "FAIL", 10, 0);
+                }
+                if (error == SOCKET_ERROR)
+                    esc("send", listenfd, acceptfd);
             }
             // Take a screenshot right now.
             else if (tokens[0] == "3")

@@ -88,11 +88,37 @@ namespace UI
 		}
 	}
 
+	bool listProcess(SOCKET fd) {
+		int error = send(fd, "2-", 2, 0);
+		char response[64000];
+		error = recv(fd, response, 64000, 0);
+		if (error == SOCKET_ERROR) return false;
+		std::cout << response;
+		return true;
+	}
+
+	void processControlMenu(SOCKET fd) {
+		cout << "\t\t\t-----------List Of Processess-----------\n";
+		if (listProcess(fd)) {
+			int pid;
+			std::cout << "Enter process's ID of which you want to terminate: ";
+			std::cin >> pid;
+			int error = send(fd, (char*)&pid, sizeof(pid), 0);
+
+			char response[CHECK_SIZE];
+			error = recv(fd, response, CHECK_SIZE, 0);
+			if (error == SOCKET_ERROR)
+				std::cout << "Fail to terminate process!" << std::endl;
+			else 
+				std::cout << "Process was terminated!" << std::endl;
+		}
+	}
+
 	void menu(SOCKET fd)
 	{
 		while (1)
 		{
-			system("cls");
+			// system("cls");
 			cout << "\t\t\t----------- Remote Computer Control Program -----------\n";
 			cout << "Here is a list of features that we currently offer:\n";
 			UI::printFeatureList(featureList);
@@ -106,6 +132,7 @@ namespace UI
 				UI::controlAppMenu(fd);
 				break;
 			case 2:
+				UI::processControlMenu(fd);
 				break;
 			case 3:
 				handle::captureScreen(fd);
