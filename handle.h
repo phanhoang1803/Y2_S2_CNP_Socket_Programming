@@ -564,6 +564,7 @@ namespace handle
 			{
 				cout << "[+] -> folder" << endl
 					 << "[-] -> file" << endl;
+				cout << "--------------------------------" << endl;
 			}
 
 			if (tokens[0] == "see")
