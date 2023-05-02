@@ -7,5 +7,6 @@
   + ...
 
 - To run this programme, move to paticular client/server directory: 
-    +           g++ -o [.exe] [.cpp] -lws2_32 -lgdi32 -lgdiplus           // Compile
+    +           g++ -o server.exe server.cpp -lws2_32 -lgdi32 -lgdiplus           // Server
+    +           g++ -o client.exe client.cpp -lws2_32 -lgdi32 -lgdiplus           // Client
     +           [.exe]                                                    // Run prog
