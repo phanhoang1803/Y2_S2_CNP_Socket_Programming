@@ -154,6 +154,7 @@ int main(int argc, char *argv[])
             else if (tokens[0] == "5")
             {
                 // Sth
+                Sever_5(acceptfd);
             }
             else
             {
