@@ -290,8 +290,8 @@ namespace handle
 		if (error == SOCKET_ERROR)
 			esc("send", fd);
 
-		string saveDir = "C:\\Users\\LONG KHANH\\Downloads";
-		string savePath = GeneratePNG_FileName(saveDir, "png");
+		string saveDir = "client";
+		string savePath = GeneratePNG_FileName(saveDir);
 		if (!receiveImage(savePath, fd))
 		{
 			cerr << "Error: receive image error.\n";
@@ -610,9 +610,9 @@ namespace handle
 					for (int it : extension)
 						cout << it << " ";
 					std::string extension_string(extension, EXT_SIZE);
-
+					cout << "Extension string: " <<  extension_string << endl;
 					// save directory
-					string saveDir = "D:\\MATLAB\\";
+					string saveDir = "client";
 					string savePath = GeneratePNG_FileName(saveDir, "transfered", extension_string);
 
 					receiveImage(savePath, fd);
