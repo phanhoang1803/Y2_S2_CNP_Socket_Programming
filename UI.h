@@ -141,6 +141,7 @@ namespace UI
 				handle::Client_CatchKeyPresses(fd);
 				break;
 			case 5:
+				handle::Client_5(fd);
 				break;
 			default:
 				cout << "Exiting the programme...\n";
