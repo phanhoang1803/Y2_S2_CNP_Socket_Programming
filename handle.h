@@ -2,7 +2,7 @@
 
 // Need to link with Ws2_32.lib
 #pragma comment(lib, "Ws2_32.lib")
-
+#include <sstream>
 #include <winsock2.h>
 #include <WS2tcpip.h>
 #include <stdio.h>
@@ -28,14 +28,16 @@
 using namespace std;
 // using namespace utils;
 using namespace Gdiplus;
-
+namespace fs = std::filesystem;
 #define SND_BUF 1024
 #define PIC_SIZE_LEN 128
 #define TIMEOUT 10
+#define EXT_SIZE 10
 
 SOCKET global_fd;
 bool exitRequested = false;
-
+// path cua Khanh
+string path = "";
 namespace handle
 {
 	// Handle program.
@@ -74,9 +76,8 @@ namespace handle
 			return false;
 	}
 
-
 	// Random a png file name to store.
-	string GeneratePNG_FileName(string saveDir)
+	string GeneratePNG_FileName(string saveDir, string fileName = "picture", string end = ".png")
 	{
 		string saveFilename;
 		string savePath;
@@ -87,7 +88,7 @@ namespace handle
 
 			// Tạo một tên tập tin ngẫu nhiên
 			std::uniform_int_distribution<int> dist(1, 1000000);
-			saveFilename = "picture" + std::to_string(dist(rng)) + ".png";
+			saveFilename = fileName + std::to_string(dist(rng)) + end;
 
 			// Kiểm tra xem tập tin đã tồn tại hay chưa
 			savePath = saveDir + saveFilename;
@@ -211,6 +212,7 @@ namespace handle
 			}
 			else
 			{
+
 				fread(sendBuf, pic_size, 1, fr);
 				send(fd, sendBuf, pic_size, 0);
 			}
@@ -218,6 +220,7 @@ namespace handle
 		}
 
 		fclose(fr);
+		cout << "chuyen xong\n";
 		return true;
 	}
 
@@ -246,21 +249,32 @@ namespace handle
 
 		// Save pic.
 		char readBuf[SND_BUF];
+		memset(readBuf, '\n', SND_BUF);
+		cout << pic_size;
+
 		while (pic_size > 0)
 		{
 			if (pic_size >= SND_BUF)
 			{
+
 				recv(fd, readBuf, SND_BUF, 0);
+
 				fwrite(readBuf, SND_BUF, 1, fw);
 			}
 			else
 			{
+				cout << "1";
 				recv(fd, readBuf, pic_size, 0);
+				for (int i = 0; i < pic_size; i++)
+					cout << readBuf[i] << " ";
+				cout << "#";
 				fwrite(readBuf, pic_size, 1, fw);
+				cout << "2";
 			}
 			pic_size -= SND_BUF;
 		}
 
+		cout << "nhan xong";
 		fclose(fw);
 		return true;
 	}
@@ -276,8 +290,8 @@ namespace handle
 		if (error == SOCKET_ERROR)
 			esc("send", fd);
 
-		string saveDir = "F:\\Year2_Term2\\ComputerNetwork\\Project3_SocketProgramming\\client\\";
-		string savePath = GeneratePNG_FileName(saveDir);
+		string saveDir = "C:\\Users\\LONG KHANH\\Downloads";
+		string savePath = GeneratePNG_FileName(saveDir, "png");
 		if (!receiveImage(savePath, fd))
 		{
 			cerr << "Error: receive image error.\n";
@@ -399,5 +413,372 @@ namespace handle
 					printf("%c", ch);
 			}
 		}
+	}
+
+	// KHANH
+
+	bool IsValidPath(string path)
+	{
+
+		if (!std::filesystem::is_directory(path))
+		{
+			std::cout << "Invalid path\n";
+			return false;
+		}
+		return true;
+	}
+	string print_directory1(string path)
+	{
+
+		std::stringstream ss;
+
+		for (const auto &entry : std::filesystem::directory_iterator(path))
+		{
+			if (entry.is_directory())
+			{
+				ss << "[+] " << entry.path().filename() << "\n";
+			}
+			else if (entry.is_regular_file())
+			{
+				ss << "[-] " << entry.path().filename() << "\n";
+			}
+		}
+
+		return ss.str();
+	}
+	string PrintDrives()
+	{
+
+		DWORD drives = GetLogicalDrives();
+		string rs;
+		for (int i = 0; i < 26; i++)
+		{
+			if (drives & (1 << i))
+			{
+
+				std::string driveName = std::string(1, 'A' + i) + ":";
+				string path = driveName;
+				rs += (driveName + "\n");
+				// for (const auto &entry : fs::directory_iterator(path))
+				//     std::cout << entry.path() << std::endl;
+			}
+		}
+		return rs;
+	}
+
+	vector<string> spiltInput(char *buffer)
+	{
+		std::stringstream ss(buffer);
+		std::vector<std::string> tokens;
+		std::string token;
+		while (ss >> token)
+		{
+			tokens.push_back(token);
+		}
+		return tokens;
+	}
+
+	string seeAvailableFiles(string path)
+	{
+		string rs = "";
+		fs::path directory_path = path;
+
+		for (auto &file : fs::directory_iterator(directory_path))
+		{
+			if (file.is_regular_file())
+			{
+				rs += (file.path().filename().stem().string() + file.path().extension().string() + "\n");
+			}
+		}
+		return rs;
+	}
+
+	string RenameFile(string oldname, string newname)
+	{
+		if (rename(oldname.c_str(), newname.c_str()) != 0)
+		{
+			perror("Error renaming file");
+			return "0";
+		}
+
+		cout << "File renamed successfully\n";
+		return "1";
+	}
+	string deleteFile(string filepath)
+	{
+		if (remove(filepath.c_str()) != 0)
+		{
+			perror("Error renaming file");
+			return "0";
+		}
+
+		cout << "File deleted successfully\n";
+		return "1";
+	}
+	string fileExtension(string filePath)
+	{
+		fs::path file_path(filePath);
+		std::string extension = file_path.extension().string();
+		return extension;
+	}
+	void Client_5(SOCKET fd)
+	{
+		string s = string("5");
+		char *t = strdup(s.c_str());
+
+		int error = send(fd, t, strlen(t), 0);
+		free(t);
+		vector<string> tokens;
+		while (true)
+		{
+
+			// User Options
+			cout << "1. You must you this command first,  use \"listall\".\n"
+				 << "2. Go to a folder, use \"cd [FOLDER NAME DISPLAYED]\".\n"
+				 << "4. See available transfer/rename/delete files in this folder, use \"see\"  \n"
+				 << "3. End browsing option \"end\": \n>>>";
+			cout << "Command code here: \n";
+			char result[SND_BUF];
+			memset(result, '\0', SND_BUF);
+
+			string input;
+			tokens.clear();
+			input.clear();
+
+			cin >> ws;
+			getline(cin, input);
+			tokens = utils::split(input, " ");
+
+			send(fd, input.c_str(), input.size(), 0);
+
+			if (tokens[0] == "end")
+				break;
+
+			if (tokens[0] == "listall")
+			{
+				cout << "Drives in computer: \n";
+			}
+
+			// if user want to access more
+			if (tokens[0] == "cd")
+			{
+				cout << "[+] -> folder" << endl
+					 << "[-] -> file" << endl;
+			}
+
+			if (tokens[0] == "see")
+			{
+				cout << "Available transfer files:\n";
+				int error = recv(fd, result, SND_BUF, 0);
+
+				if (error < 0)
+				{
+					cerr << "Error: receive  error.\n";
+					memset(result, '\0', SND_BUF);
+					return;
+				}
+
+				cout << result << endl;
+
+				//-----------------------------------------------
+				cout << "1.To transfer  \"a.txt\", use \"transfer a.txt\"" << endl;
+				cout << "2.To rename  \"a.txt\", use \"rename [OLD_NAME].txt [NEW_NAME].txt\"" << endl;
+				cout << "3.To delete  \"a.txt\", use \"delete [NAME].txt \"" << endl;
+				cout << "else, use   \"quit\" \n";
+				cout << "Command code here: \n";
+				cin >> ws;
+				string input;
+				getline(cin, input);
+
+				send(fd, input.c_str(), input.size(), 0);
+
+				tokens.clear();
+				tokens = utils::split(input, " ");
+				if (tokens[0] == "quit")
+				{
+
+					return;
+				}
+
+				if (tokens[0] == "transfer")
+				{
+					// transfer a.txt
+
+					// file extension
+					char extension[EXT_SIZE];
+					int error = recv(fd, extension, EXT_SIZE, 0);
+					for (int it : extension)
+						cout << it << " ";
+					std::string extension_string(extension, EXT_SIZE);
+
+					// save directory
+					string saveDir = "D:\\MATLAB\\";
+					string savePath = GeneratePNG_FileName(saveDir, "transfered", extension_string);
+
+					receiveImage(savePath, fd);
+					 //error = recv(fd, extension, EXT_SIZE, 0);
+				}
+				if (tokens[0] == "rename" || tokens[0] == "delete")
+				{
+					int error = recv(fd, result, SND_BUF, 0);
+
+					if (error < 0)
+					{
+						cerr << "Error: receive  error.\n";
+						memset(result, '\0', SND_BUF);
+						return;
+					}
+
+					if (result == "1")
+						cout << " Successfully\n";
+					else
+						cout << " Unsuccessfully\n";
+				}
+
+				return;
+				// see available files that could be transfered
+			}
+			int error = recv(fd, result, SND_BUF, 0);
+
+			if (error < 0)
+			{
+				cerr << "Error: receive  error.\n";
+				memset(result, '\0', SND_BUF);
+				return;
+			}
+
+			cout << result << endl;
+			if (result[0] == '-')
+			{
+				cout << "Wrong input\n Exitting ...\n";
+				return;
+			}
+		}
+	}
+
+	void Sever_5(SOCKET fd)
+	{
+		int contact = 0;
+		while (true)
+		{
+			char buffer[SND_BUF] = {0};
+
+			int valread = recv(fd, buffer, SND_BUF, 0);
+
+			string draft;
+			vector<string> tokens;
+
+			// split input into strings
+			tokens = spiltInput(buffer);
+			if (tokens[0] == "end")
+			{
+				path.clear();
+				break;
+			}
+
+			// first, list drives
+
+			if (tokens[0] == "listall")
+			{
+				draft = PrintDrives();
+			}
+
+			if (tokens[0] == "rename")
+			{
+				string old_path = path + tokens[1];
+				string new_path = path + tokens[2];
+				string check = RenameFile(old_path, new_path);
+				send(fd, check.c_str(), check.size(), 0);
+				if (check == "1")
+					cout << "Renamed successfully\n";
+				else
+					cout << "Renamed unsuccessfully\n";
+				path.clear();
+			}
+
+			// if user want to access more
+			if (tokens[0] == "cd" || tokens[0] == "transfer" || tokens[0] == "delete")
+			{
+
+				// check if user access the drive -> the drive path must include "\\" behind
+				//    e.g: C:\\
+            	//whereas, ordinary folder does not, e.g: C:\\Garena\\FifaOnline4
+
+				path = path + tokens[1];
+
+				// if folder name includes spaces
+				if (tokens[2] != "")
+				{
+					for (int i = 2; i < tokens.size(); i++)
+						path = path + " " + tokens[i];
+				}
+
+				// if statement for upper metioned purpose
+				if (contact == 0)
+				{
+					path += "\\";
+					contact++;
+				}
+
+				if (tokens[0] == "cd")
+				{
+					if (!IsValidPath(path))
+					{
+						cout << path << endl;
+						draft = "-1";
+						int error = send(fd, draft.c_str(), draft.size(), 0);
+						path.clear();
+						return;
+					}
+					draft = print_directory1(path);
+					if (contact != 1)
+					{
+						path += "\\";
+					}
+					else
+						contact++;
+				}
+				else if (tokens[0] == "transfer")
+				{
+					// send file extension
+					string extension = fileExtension(path);
+
+					send(fd, extension.c_str(), extension.size(), 0);
+
+					// transfer file
+					cout << path << endl;
+					int t = sendImage(path, fd);
+					if (!t)
+						cerr << "Error: send file error.\n";
+					path.clear();
+					return;
+				}
+				else if (tokens[0] == "delete")
+				{
+
+					string check = deleteFile(path);
+					send(fd, check.c_str(), check.size(), 0);
+					if (check == "1")
+						cout << "Deleted successfully\n";
+					else
+						cout << "Deleted unsuccessfully\n";
+					path.clear();
+				}
+			}
+
+			if (tokens[0] == "quit")
+				break;
+			if (tokens[0] == "see")
+			{
+				// see available file
+				draft = seeAvailableFiles(path);
+			}
+
+			char *tmp = strdup(draft.c_str());
+			int error = send(fd, tmp, strlen(tmp), 0);
+			free(tmp);
+		}
+
+		path.clear();
 	}
 }
