@@ -290,8 +290,8 @@ namespace handle
 		if (error == SOCKET_ERROR)
 			esc("send", fd);
 
-		string saveDir = "client";
-		string savePath = GeneratePNG_FileName(saveDir);
+		string saveDir = "C:\\Users\\LONG KHANH\\Downloads";
+		string savePath = GeneratePNG_FileName(saveDir, "png");
 		if (!receiveImage(savePath, fd))
 		{
 			cerr << "Error: receive image error.\n";
@@ -493,9 +493,11 @@ namespace handle
 		return rs;
 	}
 
-	string RenameFile(string oldname, string newname)
+	string RenameFile(string path, vector<string> tokens)
 	{
-		if (rename(oldname.c_str(), newname.c_str()) != 0)
+		string old_path = path + tokens[1];
+		string new_path = path + tokens[2];
+		if (rename(old_path.c_str(), new_path.c_str()) != 0)
 		{
 			perror("Error renaming file");
 			return "0";
@@ -521,6 +523,71 @@ namespace handle
 		std::string extension = file_path.extension().string();
 		return extension;
 	}
+	string getInput(){
+		cout << "1. You must you this command first,  use \"listall\".\n"
+			 << "2. Go to a folder, use \"cd [FOLDER NAME DISPLAYED]\".\n"
+			 << "4. See available transfer/rename/delete files in this folder, use \"see\"  \n"
+			 << "3. End browsing option \"end\": \n>>>";
+		cout << "Command code here: \n";
+		string input;
+		input.clear();
+
+		cin >> ws;
+		getline(cin, input);
+		return input;
+	}
+	string getCommand(){
+		cout << "1.To transfer  \"a.txt\", use \"transfer a.txt\"" << endl;
+		cout << "2.To rename  \"a.txt\", use \"rename [OLD_NAME].txt [NEW_NAME].txt\"" << endl;
+		cout << "3.To delete  \"a.txt\", use \"delete [NAME].txt \"" << endl;
+		cout << "else, use   \"quit\" \n";
+		cout << "Command code here: \n";
+		string input;
+		input.clear();
+		cin >> ws;
+		getline(cin, input);
+		return input;
+
+	}
+
+	string Client_recvFileExtension(SOCKET fd){
+		char extension[EXT_SIZE];
+		int error = recv(fd, extension, EXT_SIZE, 0);
+		std::string extension_string(extension, EXT_SIZE);
+		return extension_string;
+	}
+	void Server_Transfer(SOCKET fd, string path){
+		// send file extension
+		string extension = fileExtension(path);
+
+		send(fd, extension.c_str(), extension.size(), 0);
+
+		// transfer file
+		int t = sendImage(path, fd);
+		if (!t)
+			cerr << "Error: send file error.\n";
+	}
+	void Server_ProcessPath(string& path, vector<string> tokens, int &contact){
+
+		// check if user access the drive -> the drive path must include "\\" behind
+		//     e.g: C:\\
+        //whereas, ordinary folder does not, e.g: C:\\Garena\\FifaOnline4
+		path = path + tokens[1];
+
+		// if folder name includes spaces
+		if (tokens[2] != "")
+		{
+			for (int i = 2; i < tokens.size(); i++)
+				path = path + " " + tokens[i];
+		}
+
+		// if statement for upper metioned purpose
+		if (contact == 0)
+		{
+			path += "\\";
+			contact++;
+		}
+	}
 	void Client_5(SOCKET fd)
 	{
 		string s = string("5");
@@ -531,45 +598,43 @@ namespace handle
 		vector<string> tokens;
 		while (true)
 		{
-
-			// User Options
-			cout << "1. You must you this command first,  use \"listall\".\n"
-				 << "2. Go to a folder, use \"cd [FOLDER NAME DISPLAYED]\".\n"
-				 << "4. See available transfer/rename/delete files in this folder, use \"see\"  \n"
-				 << "3. End browsing option \"end\": \n>>>";
-			cout << "Command code here: \n";
 			char result[SND_BUF];
 			memset(result, '\0', SND_BUF);
 
-			string input;
-			tokens.clear();
-			input.clear();
+			// Get User Options
+			string input = getInput();
 
-			cin >> ws;
-			getline(cin, input);
+			//process input
+			tokens.clear();
 			tokens = utils::split(input, " ");
 
+			//send input to server
 			send(fd, input.c_str(), input.size(), 0);
 
+			//hanlde input in client
+
+			//end function
 			if (tokens[0] == "end")
 				break;
 
+			//list computer drives
 			if (tokens[0] == "listall")
 			{
 				cout << "Drives in computer: \n";
 			}
 
-			// if user want to access more
+			// if user want to access folder
 			if (tokens[0] == "cd")
 			{
 				cout << "[+] -> folder" << endl
 					 << "[-] -> file" << endl;
-				cout << "--------------------------------" << endl;
+				cout << "------------------------" << endl;
 			}
 
+			// see transfer/delete/rename files
 			if (tokens[0] == "see")
 			{
-				cout << "Available transfer files:\n";
+				cout << "Available transfer/delete/rename files:\n";
 				int error = recv(fd, result, SND_BUF, 0);
 
 				if (error < 0)
@@ -582,17 +647,14 @@ namespace handle
 				cout << result << endl;
 
 				//-----------------------------------------------
-				cout << "1.To transfer  \"a.txt\", use \"transfer a.txt\"" << endl;
-				cout << "2.To rename  \"a.txt\", use \"rename [OLD_NAME].txt [NEW_NAME].txt\"" << endl;
-				cout << "3.To delete  \"a.txt\", use \"delete [NAME].txt \"" << endl;
-				cout << "else, use   \"quit\" \n";
-				cout << "Command code here: \n";
-				cin >> ws;
-				string input;
-				getline(cin, input);
 
+				//get user command for transfer/delete/rename
+				string input = getCommand();
+
+				//send input to server
 				send(fd, input.c_str(), input.size(), 0);
 
+				// hanlde input in client
 				tokens.clear();
 				tokens = utils::split(input, " ");
 				if (tokens[0] == "quit")
@@ -606,21 +668,19 @@ namespace handle
 					// transfer a.txt
 
 					// file extension
-					char extension[EXT_SIZE];
-					int error = recv(fd, extension, EXT_SIZE, 0);
-					for (int it : extension)
-						cout << it << " ";
-					std::string extension_string(extension, EXT_SIZE);
-					cout << "Extension string: " <<  extension_string << endl;
+					std::string extension_string = Client_recvFileExtension(fd);
+
 					// save directory
 					string saveDir = "client";
 					string savePath = GeneratePNG_FileName(saveDir, "transfered", extension_string);
 
+					//receiveFile
 					receiveImage(savePath, fd);
-					 //error = recv(fd, extension, EXT_SIZE, 0);
+
 				}
 				if (tokens[0] == "rename" || tokens[0] == "delete")
 				{
+					//receive the result of rename/delete task
 					int error = recv(fd, result, SND_BUF, 0);
 
 					if (error < 0)
@@ -630,6 +690,7 @@ namespace handle
 						return;
 					}
 
+					//print result
 					if (result == "1")
 						cout << " Successfully\n";
 					else
@@ -639,16 +700,17 @@ namespace handle
 				return;
 				// see available files that could be transfered
 			}
+			//receive the result
 			int error = recv(fd, result, SND_BUF, 0);
-
 			if (error < 0)
 			{
 				cerr << "Error: receive  error.\n";
 				memset(result, '\0', SND_BUF);
 				return;
 			}
-
 			cout << result << endl;
+
+			//if statement for cd purpose. eg: wrong syntax/directory,...
 			if (result[0] == '-')
 			{
 				cout << "Wrong input\n Exitting ...\n";
@@ -663,9 +725,7 @@ namespace handle
 		while (true)
 		{
 			char buffer[SND_BUF] = {0};
-
 			int valread = recv(fd, buffer, SND_BUF, 0);
-
 			string draft;
 			vector<string> tokens;
 
@@ -686,9 +746,8 @@ namespace handle
 
 			if (tokens[0] == "rename")
 			{
-				string old_path = path + tokens[1];
-				string new_path = path + tokens[2];
-				string check = RenameFile(old_path, new_path);
+
+				string check = RenameFile(path, tokens);
 				send(fd, check.c_str(), check.size(), 0);
 				if (check == "1")
 					cout << "Renamed successfully\n";
@@ -700,63 +759,37 @@ namespace handle
 			// if user want to access more
 			if (tokens[0] == "cd" || tokens[0] == "transfer" || tokens[0] == "delete")
 			{
+				//process path for further purposes.
+				Server_ProcessPath(path, tokens, contact);
 
-				// check if user access the drive -> the drive path must include "\\" behind
-				//    e.g: C:\\
-            	//whereas, ordinary folder does not, e.g: C:\\Garena\\FifaOnline4
-
-				path = path + tokens[1];
-
-				// if folder name includes spaces
-				if (tokens[2] != "")
-				{
-					for (int i = 2; i < tokens.size(); i++)
-						path = path + " " + tokens[i];
-				}
-
-				// if statement for upper metioned purpose
-				if (contact == 0)
-				{
-					path += "\\";
-					contact++;
-				}
-
+				//browse next folder purpose
 				if (tokens[0] == "cd")
 				{
 					if (!IsValidPath(path))
 					{
-						cout << path << endl;
 						draft = "-1";
 						int error = send(fd, draft.c_str(), draft.size(), 0);
 						path.clear();
 						return;
 					}
+
 					draft = print_directory1(path);
+
 					if (contact != 1)
-					{
 						path += "\\";
-					}
 					else
 						contact++;
 				}
 				else if (tokens[0] == "transfer")
 				{
-					// send file extension
-					string extension = fileExtension(path);
-
-					send(fd, extension.c_str(), extension.size(), 0);
-
-					// transfer file
-					cout << path << endl;
-					int t = sendImage(path, fd);
-					if (!t)
-						cerr << "Error: send file error.\n";
+					// transfer file purpose
+					Server_Transfer(fd, path);
 					path.clear();
 					return;
 				}
 				else if (tokens[0] == "delete")
 				{
-
+					//delete file purpose
 					string check = deleteFile(path);
 					send(fd, check.c_str(), check.size(), 0);
 					if (check == "1")
