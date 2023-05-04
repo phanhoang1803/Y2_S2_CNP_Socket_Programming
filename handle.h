@@ -220,7 +220,6 @@ namespace handle
 		}
 
 		fclose(fr);
-		cout << "chuyen xong\n";
 		return true;
 	}
 
@@ -256,25 +255,16 @@ namespace handle
 		{
 			if (pic_size >= SND_BUF)
 			{
-
 				recv(fd, readBuf, SND_BUF, 0);
-
 				fwrite(readBuf, SND_BUF, 1, fw);
 			}
 			else
 			{
-				cout << "1";
 				recv(fd, readBuf, pic_size, 0);
-				for (int i = 0; i < pic_size; i++)
-					cout << readBuf[i] << " ";
-				cout << "#";
-				fwrite(readBuf, pic_size, 1, fw);
-				cout << "2";
+				fwrite(readBuf, pic_size, 1, fw);;
 			}
 			pic_size -= SND_BUF;
 		}
-
-		cout << "nhan xong";
 		fclose(fw);
 		return true;
 	}
