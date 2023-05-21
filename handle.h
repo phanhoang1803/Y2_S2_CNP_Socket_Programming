@@ -528,8 +528,8 @@ namespace handle
 	}
 	string getCommand(){
 		cout << "1.To transfer  \"a.txt\", use \"transfer a.txt\"" << endl;
-		cout << "2.To rename  \"a.txt\", use \"rename [OLD_NAME].txt [NEW_NAME].txt\"" << endl;
-		cout << "3.To delete  \"a.txt\", use \"delete [NAME].txt \"" << endl;
+		cout << "2.To rename  \"a.txt\", use \"rename a.txt [NEW_NAME].txt\"" << endl;
+		cout << "3.To delete  \"a.txt\", use \"delete a.txt \"" << endl;
 		cout << "else, use   \"quit\" \n";
 		cout << "Command code here: \n";
 		string input;
