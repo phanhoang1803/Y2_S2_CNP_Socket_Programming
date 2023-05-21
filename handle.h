@@ -515,9 +515,9 @@ namespace handle
 	}
 	string getInput(){
 		cout << "1. You must you this command first,  use \"listall\".\n"
-			 << "2. Go to a folder, use \"cd [FOLDER NAME DISPLAYED]\".\n"
-			 << "4. See available transfer/rename/delete files in this folder, use \"see\"  \n"
-			 << "3. End browsing option \"end\": \n>>>";
+		     << "2. Go to a folder, use \"cd [FOLDER NAME DISPLAYED]\".\n"
+		     << "4. See available transfer/rename/delete files in this folder, use \"see\"  \n"
+		     << "3. End browsing option \"end\": \n>>>";
 		cout << "Command code here: \n";
 		string input;
 		input.clear();
