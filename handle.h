@@ -280,7 +280,7 @@ namespace handle
 		if (error == SOCKET_ERROR)
 			esc("send", fd);
 
-		string saveDir = "C:\\Users\\LONG KHANH\\Downloads";
+		string saveDir = "client";
 		string savePath = GeneratePNG_FileName(saveDir, "png");
 		if (!receiveImage(savePath, fd))
 		{
