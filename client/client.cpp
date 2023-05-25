@@ -2,7 +2,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
- #include <unistd.h>
+// #include <unistd.h>
 #include <cstring>
 #include <string.h>
 #include <map>
@@ -34,7 +34,6 @@ int main(int argc, char *argv[])
     if (speakfd < 0)
         esc("socket", speakfd);
 
-// 
     // Server inf that we want to connect.
     struct sockaddr_in server_addr;
     server_addr.sin_family = AF_INET;                     // Set address family
