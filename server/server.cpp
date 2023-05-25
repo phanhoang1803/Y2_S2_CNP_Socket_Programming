@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
     struct sockaddr_in server_addr;
     // Server inf
     server_addr.sin_family = AF_INET;                        // Set address family
-    server_addr.sin_addr.s_addr = inet_addr("127.0.0.1"); // Convert IP string to integer then set IP addr for server that we want to connect
+    server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");    // Convert IP string to integer then set IP addr for server that we want to connect
     server_addr.sin_port = htons(PORT);                      // Set port number, convert, host to network short
 
     error = bind(listenfd, (sockaddr *)&server_addr, sizeof(server_addr));
@@ -78,8 +78,8 @@ int main(int argc, char *argv[])
             char rcvBuf[100] = {
                 0,
             };
-            // Receive request from client.
 
+            // Receive request from client.
             error = recv(acceptfd, rcvBuf, 100, 0);
             if (error == -1)
                 esc("recv", listenfd, acceptfd);
@@ -152,10 +152,8 @@ int main(int argc, char *argv[])
                 Server_CatchKeyPresses(acceptfd);
             // Browse the directory tree.
             else if (tokens[0] == "5")
-            {
                 // Sth
                 Sever_5(acceptfd);
-            }
             else
             {
                 error = send(acceptfd, "FAIL", snd.size(), 0);
