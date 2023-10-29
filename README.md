@@ -6,8 +6,12 @@
     or set another ID that is compatible with your needs.
   + ...
 
-- To run this programme, move to paticular client/server directory: 
+- To run this programme, move to paticular client/server directory:
+
     +           g++ -o server.exe server.cpp -lws2_32 -lgdi32 -lgdiplus           // Compile Server
     +           g++ -o client.exe client.cpp -lws2_32 -lgdi32 -lgdiplus           // Compile Client
     +           .\server.exe                                                      // Run Server
-    +           .\client.exe                                                      // Run Client
+    +           .\client.exe                                                      // Run Client-
+- Demo:
+  [Video](https://youtu.be/I3tQlatmGN0?si=MpEtJfgpe5vUzz13)
+
